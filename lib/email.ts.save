@@ -1,0 +1,82 @@
+from: 'noreply@buildos.app',from: 'noreply@buildos.app',from: 'noreply@buildos.app',import { Resend } from 'resend'
+
+const resend = new Resend(process.env.NEXT_PUBLIC_RESEND_API_KEY)
+
+export async function sendMagicLinkEmail(email: string, magicLink: string) {
+  try {
+    const result = await resend.emails.send({
+      from: 'onboarding@resend.dev',
+      to: email,
+      subject: 'Your BUILD OS Magic Link',
+      html: `
+        <h2>Welcome to BUILD OS!</h2>
+        <p>Click the link below to sign in:</p>
+        <a href="${magicLink}" style="background-color: #667eea; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; display: inline-block;">
+          Sign In
+        </a>
+        <p style="margin-top: 20px; color: #666; font-size: 12px;">
+          This link expires in 24 hours.
+        </p>
+      `
+    })
+    return result
+  } catch (error) {
+    console.error('Failed to send email:', error)
+    throw error
+  }
+}
+
+export async function sendFeedbackNotificationEmail(
+  email: string,
+  designTitle: string,
+  feedbackContent: string
+) {
+  try {
+    const result = await resend.emails.send({
+      from: 'onboarding@resend.dev',
+      to: email,
+      subject: `New feedback on "${designTitle}"`,
+      html: `
+        <h2>New Feedback on Your Design</h2>
+        <p><strong>Design:</strong> ${designTitle}</p>
+        <p><strong>Feedback:</strong></p>
+        <p>${feedbackContent}</p>
+        <a href="https://buildos.app/dashboard" style="background-color: #667eea; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; display: inline-block; margin-top: 20px;">
+          View Feedback
+        </a>
+      `
+    })
+    return result
+  } catch (error) {
+    console.error('Failed to send notification:', error)
+    throw error
+  }
+}
+
+export async function sendReplyNotificationEmail(
+  email: string,
+  designTitle: string,
+  replyContent: string
+) {
+  try {
+    const result = await resend.emails.send({
+      from: 'noreply@buildos.app',
+      to: email,
+      subject: `New reply on "${designTitle}"`,
+      html: `
+        <h2>New Reply on Your Feedback</h2>
+        <p><strong>Design:</strong> ${designTitle}</p>
+        <p><strong>Reply:</strong></p>
+        <p>${replyContent}</p>
+        <a href="https://buildos.app/dashboard" style="background-color: #667eea; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; display: inline-block; margin-top: 20px;">
+          View Reply
+        </a>
+      `
+    })
+    return result
+  } catch (error) {
+    console.error('Failed to send notification:', error)
+    throw error
+  }
+}
+
