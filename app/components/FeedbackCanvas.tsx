@@ -2,6 +2,14 @@
 
 import { useEffect, useState } from 'react'
 
+interface Reply {
+  id: string
+  feedback_id: string
+  user_id: string
+  reply_text: string
+  created_at: string
+}
+
 interface Feedback {
   id: string
   x: number
@@ -9,6 +17,7 @@ interface Feedback {
   comment: string
   user_id: string
   created_at: string
+  replies?: Reply[]
 }
 
 interface FeedbackCanvasProps {
@@ -24,6 +33,9 @@ export default function FeedbackCanvas({ designId, imageUrl, userId }: FeedbackC
   const [pinnedCoords, setPinnedCoords] = useState<{ x: number; y: number } | null>(null)
   const [comment, setComment] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [selectedPin, setSelectedPin] = useState<string | null>(null)
+  const [replyText, setReplyText] = useState('')
+  const [replying, setReplying] = useState(false)
 
   useEffect(() => {
     fetchFeedback()
@@ -34,7 +46,17 @@ export default function FeedbackCanvas({ designId, imageUrl, userId }: FeedbackC
       const res = await fetch(`/api/feedback?design_id=${designId}`)
       const data = await res.json()
       if (data.success) {
-        setFeedback(data.feedback)
+        const feedbackWithReplies = await Promise.all(
+          data.feedback.map(async (pin: Feedback) => {
+            const replyRes = await fetch(`/api/feedback-replies?feedback_id=${pin.id}`)
+            const replyData = await replyRes.json()
+            return {
+              ...pin,
+              replies: replyData.success ? replyData.replies : []
+            }
+          })
+        )
+        setFeedback(feedbackWithReplies)
       }
     } catch (error) {
       console.error('Error fetching feedback:', error)
@@ -87,6 +109,36 @@ export default function FeedbackCanvas({ designId, imageUrl, userId }: FeedbackC
     }
   }
 
+  const handleAddReply = async (feedbackId: string) => {
+    if (!replyText.trim()) {
+      alert('Please write a reply')
+      return
+    }
+
+    setReplying(true)
+    try {
+      const res = await fetch('/api/feedback-replies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          feedback_id: feedbackId,
+          user_id: userId,
+          reply_text: replyText.trim()
+        })
+      })
+
+      const data = await res.json()
+      if (data.success) {
+        setReplyText('')
+        fetchFeedback()
+      }
+    } catch (error) {
+      alert('Error saving reply')
+    } finally {
+      setReplying(false)
+    }
+  }
+
   return (
     <div>
       <div style={{ marginBottom: '20px' }}>
@@ -127,6 +179,7 @@ export default function FeedbackCanvas({ designId, imageUrl, userId }: FeedbackC
         {feedback.map((pin) => (
           <div
             key={pin.id}
+            onClick={() => setSelectedPin(selectedPin === pin.id ? null : pin.id)}
             style={{
               position: 'absolute',
               left: `${pin.x}%`,
@@ -134,7 +187,7 @@ export default function FeedbackCanvas({ designId, imageUrl, userId }: FeedbackC
               transform: 'translate(-50%, -50%)',
               width: '30px',
               height: '30px',
-              background: '#667eea',
+              background: selectedPin === pin.id ? '#ff6b6b' : '#667eea',
               borderRadius: '50%',
               border: '2px solid white',
               cursor: 'pointer',
@@ -235,25 +288,86 @@ export default function FeedbackCanvas({ designId, imageUrl, userId }: FeedbackC
         {feedback.length === 0 ? (
           <p style={{ color: '#999' }}>No feedback yet. Be the first to add a pin!</p>
         ) : (
-          <div style={{ background: '#f8f9fa', padding: '15px', borderRadius: '8px' }}>
+          <div>
             {feedback.map((pin) => (
               <div
                 key={pin.id}
                 style={{
-                  background: '#fff',
-                  padding: '12px',
+                  background: selectedPin === pin.id ? '#e8eaf6' : '#f8f9fa',
+                  padding: '15px',
                   marginBottom: '10px',
-                  borderRadius: '4px',
-                  borderLeft: '4px solid #667eea'
+                  borderRadius: '8px',
+                  borderLeft: '4px solid #667eea',
+                  cursor: 'pointer'
                 }}
+                onClick={() => setSelectedPin(selectedPin === pin.id ? null : pin.id)}
               >
                 <p style={{ margin: '0 0 8px 0', fontWeight: 'bold', color: '#667eea' }}>
                   Position: {Math.round(pin.x)}%, {Math.round(pin.y)}%
                 </p>
                 <p style={{ margin: '0 0 8px 0', color: '#333' }}>{pin.comment}</p>
-                <p style={{ margin: 0, fontSize: '12px', color: '#999' }}>
+                <p style={{ margin: '0 0 12px 0', fontSize: '12px', color: '#999' }}>
                   {new Date(pin.created_at).toLocaleDateString()}
                 </p>
+
+                {selectedPin === pin.id && (
+                  <div style={{ background: '#fff', padding: '12px', borderRadius: '4px', marginTop: '12px' }}>
+                    <h4 style={{ margin: '0 0 12px 0' }}>Replies ({pin.replies?.length || 0})</h4>
+
+                    {pin.replies && pin.replies.length > 0 && (
+                      <div style={{ marginBottom: '12px' }}>
+                        {pin.replies.map((reply) => (
+                          <div
+                            key={reply.id}
+                            style={{
+                              background: '#f5f5f5',
+                              padding: '10px',
+                              marginBottom: '8px',
+                              borderRadius: '4px',
+                              borderLeft: '3px solid #999'
+                            }}
+                          >
+                            <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#666' }}>
+                              {new Date(reply.created_at).toLocaleDateString()}
+                            </p>
+                            <p style={{ margin: 0, color: '#333' }}>{reply.reply_text}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <textarea
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      placeholder="Add a reply..."
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        boxSizing: 'border-box',
+                        minHeight: '60px',
+                        marginBottom: '8px'
+                      }}
+                    />
+                    <button
+                      onClick={() => handleAddReply(pin.id)}
+                      disabled={replying}
+                      style={{
+                        padding: '8px 16px',
+                        background: '#667eea',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: replying ? 'wait' : 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      {replying ? 'Saving...' : 'Reply'}
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
