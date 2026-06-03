@@ -1,129 +1,121 @@
 'use client'
 
-import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { createClient } from '@supabase/supabase-js'
 
-export default function HomePage() {
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+interface Design {
+  id: string
+  title: string
+  description: string
+  image_url: string
+  created_at: string
+}
+
+export default function Home() {
+  const [designs, setDesigns] = useState<Design[]>([])
+  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getUser()
+      setUser(data.user)
+
+      if (data.user) {
+        const { data: designData } = await supabase
+          .from('designs')
+          .select('*')
+          .eq('user_id', data.user.id)
+          .order('created_at', { ascending: false })
+
+        setDesigns(designData || [])
+      }
+      setLoading(false)
+    }
+
+    checkUser()
+  }, [])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    window.location.href = '/login'
+  }
+
+  const headerStyle = { background: '#fff', borderBottom: '1px solid #ddd', padding: '20px' }
+  const containerStyle = { maxWidth: '1200px', margin: '0 auto' }
+  const mainStyle = { minHeight: '100vh', background: '#f8f9fa' }
+
   return (
-    <div style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      {/* Navigation */}
-      <nav style={{
-        padding: '20px 40px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        borderBottom: '1px solid #eee'
-      }}>
-        <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>
-          BUILD OS
-        </h2>
-        <Link href="/login" style={{
-          padding: '10px 20px',
-          background: '#667eea',
-          color: 'white',
-          textDecoration: 'none',
-          borderRadius: '4px'
-        }}>
-          Sign In
-        </Link>
-      </nav>
-
-      {/* Hero Section */}
-      <section style={{
-        padding: '80px 40px',
-        textAlign: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        color: 'white'
-      }}>
-        <h1 style={{ fontSize: '48px', marginBottom: '20px' }}>
-          Design Feedback, Instantly
-        </h1>
-        <p style={{ fontSize: '20px', marginBottom: '40px', maxWidth: '600px', margin: '0 auto 40px' }}>
-          Upload your designs, get real-time feedback from your team, iterate faster
-        </p>
-        <Link href="/login" style={{
-          display: 'inline-block',
-          padding: '16px 40px',
-          background: 'white',
-          color: '#667eea',
-          textDecoration: 'none',
-          borderRadius: '4px',
-          fontSize: '18px',
-          fontWeight: 'bold',
-          cursor: 'pointer'
-        }}>
-          Get Started Free
-        </Link>
-      </section>
-
-      {/* Features Section */}
-      <section style={{ padding: '80px 40px', maxWidth: '1200px', margin: '0 auto' }}>
-        <h2 style={{ textAlign: 'center', fontSize: '36px', marginBottom: '60px' }}>
-          Why BUILD OS?
-        </h2>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '40px'
-        }}>
-          {[
-            { title: 'Real-Time Feedback', desc: 'Pin feedback directly on your designs' },
-            { title: 'Iterate Faster', desc: 'See feedback instantly, make changes immediately' },
-            { title: 'Team Collaboration', desc: 'Reply to feedback, keep discussions in one place' }
-          ].map((feature, i) => (
-            <div key={i} style={{
-              padding: '30px',
-              border: '1px solid #eee',
-              borderRadius: '8px',
-              textAlign: 'center'
-            }}>
-              <h3 style={{ fontSize: '20px', marginBottom: '10px' }}>
-                {feature.title}
-              </h3>
-              <p style={{ color: '#666' }}>{feature.desc}</p>
-            </div>
-          ))}
+    <div style={mainStyle}>
+      <div style={headerStyle}>
+        <div style={{ ...containerStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h1 style={{ margin: 0, fontSize: '24px' }}>BUILD OS</h1>
+          <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+            {user && <span style={{ fontSize: '14px', color: '#666' }}>{user.email}</span>}
+            {user ? (
+              <button onClick={handleLogout} style={{ padding: '8px 16px', background: '#ff6b6b', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                Logout
+              </button>
+            ) : (
+              <a href="/login" style={{ color: '#667eea', fontWeight: 'bold', textDecoration: 'none' }}>Login</a>
+            )}
+          </div>
         </div>
-      </section>
+      </div>
 
-      {/* CTA Section */}
-      <section style={{
-        padding: '60px 40px',
-        background: '#f8f9fa',
-        textAlign: 'center'
-      }}>
-        <h2 style={{ fontSize: '36px', marginBottom: '20px' }}>
-          Ready to build better?
-        </h2>
-        <p style={{ fontSize: '18px', color: '#666', marginBottom: '30px' }}>
-          Start sharing feedback with your team today
-        </p>
-        <Link href="/login" style={{
-          display: 'inline-block',
-          padding: '16px 40px',
-          background: '#667eea',
-          color: 'white',
-          textDecoration: 'none',
-          borderRadius: '4px',
-          fontSize: '18px',
-          fontWeight: 'bold'
-        }}>
-          Sign Up Free
-        </Link>
-      </section>
+      <div style={{ ...containerStyle, padding: '40px 20px' }}>
+        {!user && (
+          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <h2>Welcome to BUILD OS</h2>
+            <p style={{ color: '#666' }}>Collaborate on design feedback with real-time pinning and threads</p>
+            <a href="/login" style={{ display: 'inline-block', padding: '14px 28px', background: '#667eea', color: 'white', textDecoration: 'none', borderRadius: '4px', fontWeight: 'bold' }}>
+              Get Started
+            </a>
+          </div>
+        )}
 
-      {/* Footer */}
-      <footer style={{
-        padding: '40px',
-        background: '#1a1a1a',
-        color: 'white',
-        textAlign: 'center',
-        borderTop: '1px solid #333'
-      }}>
-        <p style={{ margin: '0 0 10px 0' }}>© 2026 BUILD OS. Our name is our mission.</p>
-        <p style={{ margin: 0, fontSize: '14px', color: '#999' }}>
-          Made by design teams, for design teams
-        </p>
-      </footer>
+        {user && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+              <h2 style={{ margin: 0 }}>Your Designs</h2>
+              <a href="/upload" style={{ padding: '10px 20px', background: '#667eea', color: 'white', textDecoration: 'none', borderRadius: '4px', fontWeight: 'bold' }}>
+                Upload Design
+              </a>
+            </div>
+
+            {loading && <p style={{ textAlign: 'center', color: '#999' }}>Loading designs...</p>}
+
+            {!loading && designs.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '40px', background: '#fff', borderRadius: '8px' }}>
+                <p style={{ color: '#999', marginBottom: '20px' }}>No designs yet. Upload your first design!</p>
+                <a href="/upload" style={{ display: 'inline-block', padding: '10px 20px', background: '#667eea', color: 'white', textDecoration: 'none', borderRadius: '4px', fontWeight: 'bold' }}>
+                  Upload Design
+                </a>
+              </div>
+            )}
+
+            {!loading && designs.length > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px' }}>
+                {designs.map((design) => (
+                  <a key={design.id} href={`/designs/${design.id}`} style={{ textDecoration: 'none', color: 'inherit', background: '#fff', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                    <img src={design.image_url} alt={design.title} style={{ width: '100%', height: '180px', objectFit: 'cover' }} />
+                    <div style={{ padding: '15px' }}>
+                      <h3 style={{ margin: '0 0 5px 0', fontSize: '16px' }}>{design.title}</h3>
+                      <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '12px' }}>{new Date(design.created_at).toLocaleDateString()}</p>
+                      <p style={{ margin: 0, color: '#999', fontSize: '13px' }}>{design.description || 'No description'}</p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
