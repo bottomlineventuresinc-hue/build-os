@@ -12,65 +12,41 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File
     const userId = formData.get('userId') as string
 
-    if (!file || !userId) {
-      return NextResponse.json(
-        { error: 'File and userId are required' },
-        { status: 400 }
-      )
+    if (!file) {
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
-    if (file.size > 50 * 1024 * 1024) {
-      return NextResponse.json(
-        { error: 'File too large (max 50MB)' },
-        { status: 400 }
-      )
-    }
+    // Sanitize filename: remove spaces, special chars, keep only alphanumeric, dots, hyphens
+    const sanitized = file.name
+      .replace(/[^a-zA-Z0-9.-]/g, '_')
+      .toLowerCase()
+    
+    const timestamp = Date.now()
+    const fileName = `${userId}/${timestamp}-${sanitized}`
 
-    const allowedTypes = [
-      'application/pdf',
-      'image/png',
-      'image/jpeg',
-      'application/zip'
-    ]
-    if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json(
-        { error: 'Invalid file type' },
-        { status: 400 }
-      )
-    }
-
-    const fileName = `${userId}/${Date.now()}-${file.name}`
-    const arrayBuffer = await file.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
-
+    // Upload to Supabase Storage
     const { data, error } = await supabase.storage
       .from('designs')
-      .upload(fileName, buffer, {
-        contentType: file.type,
+      .upload(fileName, file, {
+        cacheControl: '3600',
         upsert: false
       })
 
     if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    // Get public URL
     const { data: publicUrl } = supabase.storage
       .from('designs')
       .getPublicUrl(fileName)
 
     return NextResponse.json({
       success: true,
-      fileName: data.path,
-      fileUrl: publicUrl.publicUrl
+      fileUrl: publicUrl.publicUrl,
+      fileName: fileName
     })
   } catch (error) {
-    console.error('Upload error:', error)
-    return NextResponse.json(
-      { error: 'Upload failed' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: String(error) }, { status: 500 })
   }
 }
