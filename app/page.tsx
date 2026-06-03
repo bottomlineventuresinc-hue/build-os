@@ -1,66 +1,129 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import Link from 'next/link'
+
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      {/* Navigation */}
+      <nav style={{
+        padding: '20px 40px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        borderBottom: '1px solid #eee'
+      }}>
+        <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>
+          BUILD OS
+        </h2>
+        <Link href="/login" style={{
+          padding: '10px 20px',
+          background: '#667eea',
+          color: 'white',
+          textDecoration: 'none',
+          borderRadius: '4px'
+        }}>
+          Sign In
+        </Link>
+      </nav>
+
+      {/* Hero Section */}
+      <section style={{
+        padding: '80px 40px',
+        textAlign: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white'
+      }}>
+        <h1 style={{ fontSize: '48px', marginBottom: '20px' }}>
+          Design Feedback, Instantly
+        </h1>
+        <p style={{ fontSize: '20px', marginBottom: '40px', maxWidth: '600px', margin: '0 auto 40px' }}>
+          Upload your designs, get real-time feedback from your team, iterate faster
+        </p>
+        <Link href="/login" style={{
+          display: 'inline-block',
+          padding: '16px 40px',
+          background: 'white',
+          color: '#667eea',
+          textDecoration: 'none',
+          borderRadius: '4px',
+          fontSize: '18px',
+          fontWeight: 'bold',
+          cursor: 'pointer'
+        }}>
+          Get Started Free
+        </Link>
+      </section>
+
+      {/* Features Section */}
+      <section style={{ padding: '80px 40px', maxWidth: '1200px', margin: '0 auto' }}>
+        <h2 style={{ textAlign: 'center', fontSize: '36px', marginBottom: '60px' }}>
+          Why BUILD OS?
+        </h2>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '40px'
+        }}>
+          {[
+            { title: 'Real-Time Feedback', desc: 'Pin feedback directly on your designs' },
+            { title: 'Iterate Faster', desc: 'See feedback instantly, make changes immediately' },
+            { title: 'Team Collaboration', desc: 'Reply to feedback, keep discussions in one place' }
+          ].map((feature, i) => (
+            <div key={i} style={{
+              padding: '30px',
+              border: '1px solid #eee',
+              borderRadius: '8px',
+              textAlign: 'center'
+            }}>
+              <h3 style={{ fontSize: '20px', marginBottom: '10px' }}>
+                {feature.title}
+              </h3>
+              <p style={{ color: '#666' }}>{feature.desc}</p>
+            </div>
+          ))}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </section>
+
+      {/* CTA Section */}
+      <section style={{
+        padding: '60px 40px',
+        background: '#f8f9fa',
+        textAlign: 'center'
+      }}>
+        <h2 style={{ fontSize: '36px', marginBottom: '20px' }}>
+          Ready to build better?
+        </h2>
+        <p style={{ fontSize: '18px', color: '#666', marginBottom: '30px' }}>
+          Start sharing feedback with your team today
+        </p>
+        <Link href="/login" style={{
+          display: 'inline-block',
+          padding: '16px 40px',
+          background: '#667eea',
+          color: 'white',
+          textDecoration: 'none',
+          borderRadius: '4px',
+          fontSize: '18px',
+          fontWeight: 'bold'
+        }}>
+          Sign Up Free
+        </Link>
+      </section>
+
+      {/* Footer */}
+      <footer style={{
+        padding: '40px',
+        background: '#1a1a1a',
+        color: 'white',
+        textAlign: 'center',
+        borderTop: '1px solid #333'
+      }}>
+        <p style={{ margin: '0 0 10px 0' }}>© 2026 BUILD OS. Our name is our mission.</p>
+        <p style={{ margin: 0, fontSize: '14px', color: '#999' }}>
+          Made by design teams, for design teams
+        </p>
+      </footer>
     </div>
-  );
+  )
 }
-// BUILD OS Test Deploy
