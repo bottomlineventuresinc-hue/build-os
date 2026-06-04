@@ -91,6 +91,8 @@ export default function UploadForm() {
         setTimeout(() => {
           window.location.href = `/designs/${designData.designId}`
         }, 1500)
+      } else {
+        setMessage(`Error: ${designData.error}`)
       }
     } catch (error) {
       setMessage(`Error: ${error}`)
@@ -184,7 +186,7 @@ export default function UploadForm() {
 
         <button
           type="submit"
-          disabled={!file || loading}
+          disabled={!file || loading || !userId}
           style={{
             width: '100%',
             padding: '14px',
@@ -195,7 +197,7 @@ export default function UploadForm() {
             fontSize: '16px',
             fontWeight: 'bold',
             cursor: loading ? 'wait' : 'pointer',
-            opacity: !file || loading ? 0.6 : 1
+            opacity: !file || loading || !userId ? 0.6 : 1
           }}
         >
           {loading ? 'Uploading...' : 'Upload Design'}
